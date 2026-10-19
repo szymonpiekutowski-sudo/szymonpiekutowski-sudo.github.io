@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1230">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="Find the best time to set your alarm so you wake up during light sleep, and try simple techniques to fall asleep faster. Works offline.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&display=swap">
+<title>Sleep Phases</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --night: #0E1230;
+    --dusk: #171C45;
+    --dusk-2: #1F2556;
+    --line: rgba(236, 233, 255, 0.10);
+    --moon: #ECE9FF;
+    --haze: #9C9FCC;
+    --lav: #8F7BFF;
+    --sky: #5CD6FF;
+    --dawn: #FFC47A;
+    --display: "Alegreya", "Iowan Old Style", "Palatino Linotype", Palatino, "Noto Serif", Georgia, serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans JP", "Noto Sans KR", "Noto Sans Devanagari", sans-serif;
+    --tabbar: 64px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: var(--night);
+    color: var(--moon);
+    font-family: var(--body);
+    font-size: 16px; line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* A few fixed stars in the top of the sky. No motion. */
+  body::before {
+    content: ""; position: fixed; inset: 0 0 auto 0; height: 340px; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(1.2px 1.2px at 12% 18%, rgba(236,233,255,.7), transparent 60%),
+      radial-gradient(1px 1px at 27% 42%, rgba(236,233,255,.45), transparent 60%),
+      radial-gradient(1.4px 1.4px at 46% 12%, rgba(236,233,255,.6), transparent 60%),
+      radial-gradient(1px 1px at 63% 33%, rgba(236,233,255,.4), transparent 60%),
+      radial-gradient(1.3px 1.3px at 78% 9%, rgba(236,233,255,.65), transparent 60%),
+      radial-gradient(1px 1px at 90% 38%, rgba(236,233,255,.45), transparent 60%),
+      radial-gradient(1px 1px at 55% 58%, rgba(236,233,255,.3), transparent 60%),
+      radial-gradient(1.1px 1.1px at 6% 62%, rgba(236,233,255,.35), transparent 60%),
+      radial-gradient(600px 300px at 80% -10%, rgba(143,123,255,.16), transparent 70%);
+  }
+  main {
+    position: relative; z-index: 1;
+    max-width: 460px; margin: 0 auto;
+    padding: max(20px, env(safe-area-inset-top)) 20px calc(var(--tabbar) + 32px + env(safe-area-inset-bottom));
+  }
+  .view[hidden] { display: none; }
+  h1, h2, h3, .display { font-family: var(--display); font-weight: 700; letter-spacing: 0; margin: 0; }
+  p { margin: 0; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; border-radius: 8px; }
+  .muted { color: var(--haze); }
+  .small { font-size: .875rem; }
+
+  /* Top bar on home */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 1.05rem; }
+  .brand img { width: 28px; height: 28px; border-radius: 8px; }
+  .lang {
+    appearance: none; -webkit-appearance: none;
+    background: transparent; color: var(--haze);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 28px 6px 12px; font-size: .85rem;
+    background-image: linear-gradient(45deg, transparent 50%, var(--haze) 50%), linear-gradient(135deg, var(--haze) 50%, transparent 50%);
+    background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+  }
+
+  /* Home hero */
+  .greet { font-size: 1.15rem; color: var(--haze); font-family: var(--display); font-weight: 500; }
+  .clock { font-family: var(--display); font-weight: 700; font-size: clamp(4.2rem, 22vw, 5.8rem); line-height: .95; margin: 2px 0 30px; font-variant-numeric: lining-nums tabular-nums; }
+  .clock .ap, .bigtime .ap { font-size: .32em; margin-left: .25em; font-weight: 500; color: var(--haze); }
+
+  .plan { border-top: 1px solid var(--line); padding-top: 22px; }
+  .lead { color: var(--haze); max-width: 30ch; }
+  .bigtime { font-family: var(--display); font-weight: 700; color: var(--dawn); font-size: 3.4rem; line-height: 1; margin: 6px 0 4px; font-variant-numeric: lining-nums tabular-nums; }
+  .dur { color: var(--moon); }
+  .dur b { font-weight: 600; }
+
+  .hypno { display: block; width: 100%; height: 104px; margin: 18px 0 14px; overflow: visible; }
+
+  .chips { display: flex; gap: 8px; margin-bottom: 14px; }
+  .chip {
+    flex: 1 1 0; min-width: 0; text-align: left;
+    background: var(--dusk); border: 1px solid transparent; border-radius: 14px;
+    padding: 10px 12px; cursor: pointer;
+  }
+  .chip .t { display: block; font-family: var(--display); font-weight: 700; font-size: 1.2rem; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+  .chip .t .ap { font-size: .6em; color: var(--haze); margin-left: .15em; }
+  .chip .d { display: block; font-size: .78rem; color: var(--haze); white-space: nowrap; }
+  .chip[aria-pressed="true"] { border-color: var(--dawn); background: var(--dusk-2); }
+  .chip[aria-pressed="true"] .t { color: var(--dawn); }
+
+  .linkbtn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: none; border: 0; padding: 10px 0; cursor: pointer;
+    color: var(--sky); font-weight: 600; text-decoration: none;
+  }
+
+  .section { margin-top: 40px; }
+  .section h2 { font-size: 1.6rem; margin-bottom: 14px; }
+
+  .feature {
+    background: var(--dusk); border-radius: 20px; padding: 20px;
+    display: grid; gap: 6px;
+  }
+  .feature h3 { font-size: 1.35rem; }
+  .meta { display: flex; gap: 10px; align-items: center; font-size: .82rem; color: var(--haze); }
+  .tag { border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; }
+  .primary {
+    margin-top: 10px; justify-self: start;
+    background: var(--moon); color: var(--night);
+    border: 0; border-radius: 999px; padding: 11px 20px; font-weight: 700; cursor: pointer;
+  }
+  .primary:active { transform: translateY(1px); }
+
+  /* Alarm view */
+  .pagehead { margin-bottom: 24px; }
+  .pagehead h1 { font-size: 2rem; line-height: 1.15; }
+  .pagehead p { color: var(--haze); margin-top: 6px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: .9rem; color: var(--haze); margin-bottom: 6px; }
+  input[type="time"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; padding: 12px 16px; font-size: 1.6rem;
+    font-family: var(--display); font-weight: 700;
+    color: var(--moon); background: var(--dusk);
+    border: 1px solid transparent; border-radius: 14px;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  input[type="time"]:focus { outline: none; border-color: var(--sky); }
+  .wide { width: 100%; text-align: center; padding: 14px; margin-top: 4px; }
+  .result { margin-top: 30px; border-top: 1px solid var(--line); padding-top: 22px; }
+  .result .hint { color: var(--haze); margin-top: 6px; }
+  .foot { margin-top: 26px; color: var(--haze); font-size: .82rem; line-height: 1.55; }
+
+  /* Techniques list */
+  .tlist { list-style: none; padding: 0; margin: 0; }
+  .tlist li + li { border-top: 1px solid var(--line); }
+  .trow {
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center;
+    width: 100%; text-align: left; background: none; border: 0; padding: 16px 0; cursor: pointer; text-decoration: none; color: inherit;
+  }
+  .trow h3 { font-size: 1.25rem; }
+  .trow .d { grid-column: 1; color: var(--haze); font-size: .92rem; }
+  .trow .side { grid-row: 1 / span 2; grid-column: 2; display: grid; justify-items: end; gap: 6px; font-size: .8rem; color: var(--haze); }
+  .trow .chev { width: 18px; height: 18px; color: var(--haze); }
+
+  /* Technique detail */
+  .back { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 6px 0; margin-bottom: 18px; color: var(--haze); cursor: pointer; }
+  .detail h1 { font-size: 2.1rem; line-height: 1.1; margin-bottom: 10px; }
+  .why { margin: 14px 0 0; color: var(--moon); max-width: 60ch; }
+
+  .breath { margin: 30px 0 6px; display: grid; justify-items: center; gap: 14px; }
+  .orb-wrap { position: relative; width: 220px; height: 220px; display: grid; place-items: center; }
+  .orb-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--line); }
+  .orb {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, #F6F4FF 0%, #CFC8FF 38%, #8F7BFF 100%);
+    transform: scale(.5); opacity: .9;
+    transition-property: transform; transition-timing-function: cubic-bezier(.45,.05,.55,.95);
+  }
+  .orb-text { position: relative; text-align: center; color: var(--night); pointer-events: none; }
+  .orb-text .ph { display: block; font-weight: 700; font-size: 1rem; }
+  .orb-text .n { display: block; font-family: var(--display); font-weight: 700; font-size: 2.2rem; line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+  .breath .primary { justify-self: center; margin-top: 0; }
+  .breath .rounds { color: var(--haze); font-size: .9rem; min-height: 1.4em; text-align: center; }
+
+  .steps { margin: 30px 0 0; padding: 0; list-style: none; counter-reset: s; }
+  .steps h2 { font-size: 1.35rem; margin-bottom: 8px; }
+  .steps ol { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 10px 0; }
+  .steps li::before { content: counter(s); font-family: var(--display); font-weight: 700; color: var(--lav); font-size: 1.15rem; line-height: 1.35; }
+  .disclaimer { margin-top: 30px; font-size: .8rem; color: var(--haze); }
+
+  /* Bottom tab bar */
+  .tabs {
+    position: fixed; z-index: 5; left: 0; right: 0; bottom: 0;
+    background: rgba(14, 18, 48, .94);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tabs nav { max-width: 460px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); height: var(--tabbar); }
+  .tabs a {
+    display: grid; justify-items: center; align-content: center; gap: 3px;
+    color: var(--haze); text-decoration: none; font-size: .75rem;
+  }
+  .tabs a svg { width: 22px; height: 22px; }
+  .tabs a[aria-current="page"] { color: var(--moon); }
+  .tabs a[aria-current="page"] svg { color: var(--dawn); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orb { transition-duration: 0s !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <!-- HOME -->
+  <section class="view" id="v-home" aria-labelledby="h-greet">
+    <div class="topbar">
+      <div class="brand"><img src="icon-192.png" alt=""><span id="h-brand"></span></div>
+      <select class="lang" id="langSel" aria-label="Language">
+        <option value="en">English</option>
+        <option value="pl">Polski</option>
+        <option value="de">Deutsch</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="ru">Русский</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+    </div>
+
+    <p class="greet" id="h-greet"></p>
+    <p class="clock" id="h-clock" aria-live="off"></p>
+
+    <div class="plan">
+      <p class="lead" id="h-lead"></p>
+      <p class="bigtime" id="h-time"></p>
+      <p class="dur" id="h-dur"></p>
+      <svg class="hypno" id="h-hypno" role="img"></svg>
+      <div class="chips" id="h-chips"></div>
+      <p class="muted small" id="h-note"></p>
+      <a class="linkbtn" href="#/alarm" id="h-plan"></a>
+    </div>
+
+    <div class="section">
+      <h2 id="h-stuck"></h2>
+      <div class="feature" id="h-feature"></div>
+      <a class="linkbtn" href="#/tech" id="h-all"></a>
+    </div>
+  </section>
+
+  <!-- ALARM -->
+  <section class="view" id="v-alarm" hidden>
+    <header class="pagehead">
+      <h1 id="a-title"></h1>
+      <p id="a-sub"></p>
+    </header>
+    <div class="field">
+      <label for="spac" id="a-bed"></label>
+      <input type="time" id="spac" value="23:00">
+    </div>
+    <div class="field">
+      <label for="obudzic" id="a-wake"></label>
+      <input type="time" id="obudzic" value="07:00">
+    </div>
+    <button class="primary wide" id="calc" type="button"></button>
+
+    <div class="result" id="wynik" aria-live="polite">
+      <p class="lead" id="a-res"></p>
+      <p class="bigtime" id="a-time"></p>
+      <p class="dur" id="a-dur"></p>
+      <svg class="hypno" id="a-hypno" role="img"></svg>
+      <p class="hint" id="a-hint"></p>
+    </div>
+    <p class="foot" id="a-foot"></p>
+  </section>
+
+  <!-- TECHNIQUES -->
+  <section class="view" id="v-tech" hidden>
+    <header class="pagehead">
+      <h1 id="t-title"></h1>
+      <p id="t-intro"></p>
+    </header>
+    <ul class="tlist" id="t-list"></ul>
+    <p class="disclaimer" id="t-disc"></p>
+  </section>
+
+  <!-- TECHNIQUE DETAIL -->
+  <section class="view detail" id="v-detail" hidden>
+    <button class="back" type="button" id="d-back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      <span id="d-back-t"></span>
+    </button>
+    <h1 id="d-title"></h1>
+    <div class="meta" id="d-meta"></div>
+    <p class="why" id="d-why"></p>
+
+    <div class="breath" id="d-breath" hidden>
+      <div class="orb-wrap">
+        <div class="orb-ring"></div>
+        <div class="orb" id="orb"></div>
+        <div class="orb-text"><span class="ph" id="orb-ph"></span><span class="n" id="orb-n"></span></div>
+      </div>
+      <p class="rounds" id="orb-r"></p>
+      <button class="primary" type="button" id="orb-btn"></button>
+    </div>
+
+    <div class="steps">
+      <h2 id="d-how"></h2>
+      <ol id="d-steps"></ol>
+    </div>
+    <p class="disclaimer" id="d-disc"></p>
+  </section>
+</main>
+
+<div class="tabs">
+  <nav aria-label="Main">
+    <a href="#/" data-tab="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+      <span id="tab-home"></span>
+    </a>
+    <a href="#/alarm" data-tab="alarm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 9.5V13l2.2 1.6M5 4 2.5 6.5M19 4l2.5 2.5"/></svg>
+      <span id="tab-alarm"></span>
+    </a>
+    <a href="#/tech" data-tab="tech">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9c2.5-2 4.5-2 7 0s4.5 2 7 0 2.5-1 4-1M3 15c2.5-2 4.5-2 7 0s4.5 2 7 0 2.5-1 4-1"/></svg>
+      <span id="tab-tech"></span>
+    </a>
+  </nav>
+</div>
+
+<script src="i18n.js"></script>
+<script>
+(function () {
+  var FALL_ASLEEP = 7, CYCLE = 90;
+  var lang = "en", U = UI.en;
+  var homeCycles = 5;
+
+  function $(id) { return document.getElementById(id); }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+  /* ---------- Time helpers ---------- */
+  var locale = (navigator.languages && navigator.languages[0]) || navigator.language || "en";
+  // Time in the device's own format (24 h or 12 h with AM/PM), AM/PM shown smaller.
+  function timeHTML(min) {
+    min = ((min % 1440) + 1440) % 1440;
+    var d = new Date(2000, 0, 1, Math.floor(min / 60), min % 60);
+    var parts;
+    try { parts = new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).formatToParts(d); }
+    catch (e) { parts = null; }
+    if (!parts) { var h = d.getHours(), m = d.getMinutes(); return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m; }
+    var out = "", ap = "";
+    parts.forEach(function (p) {
+      if (p.type === "dayPeriod") ap = p.value;
+      else if (p.type === "literal" && /^\s+$/.test(p.value)) { /* drop space before AM/PM */ }
+      else out += p.value;
+    });
+    return esc(out) + (ap ? '<span class="ap">' + esc(ap) + "</span>" : "");
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function durText(min) {
+    var h = Math.floor(min / 60), m = Math.round(min % 60), u = U.u;
+    var ns = (u.tight || u.attach) ? "" : " ";   // space between number and unit
+    var ps = u.tight ? "" : " ";                 // space between hours and minutes
+    if (!h) return m + ns + u.m;
+    if (!m) return h + ns + u.h;
+    return h + ns + u.h + ps + m + ns + u.m;
+  }
+  function toMinutes(v) { var p = v.split(":"); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); }
+  function nowMinutes() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+
+  // Same logic as the original calculator: returns minutes from bedtime to alarm.
+  function alarmOffset(sleepMin, wakeMin) {
+    var diff = wakeMin - sleepMin;
+    if (diff < 0) diff += 1440;
+    var pointer = FALL_ASLEEP + 110;
+    while (pointer < diff) pointer += CYCLE;
+    return (pointer - diff <= 50) ? diff : pointer - CYCLE;
+  }
+
+  /* ---------- Hypnogram (the night drawn as sleep cycles) ---------- */
+  function drawHypno(svg, total) {
+    var W = Math.max(240, Math.round(svg.getBoundingClientRect().width || svg.parentNode.clientWidth || 320));
+    var H = 104, top = 16, bottom = 92, light = 26;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("aria-label", U.chart);
+    var x0 = 8, x1 = W - 14;
+    var sx = function (t) { return x0 + (x1 - x0) * (t / total); };
+    var pts = [];
+    var step = Math.max(1, total / 220);
+    for (var t = 0; t <= total + 0.001; t += step) pts.push([t, depthAt(t)]);
+    pts.push([total, depthAt(total)]);
+    function depthAt(t) {
+      if (t <= FALL_ASLEEP) return top + (light - top) * (t / FALL_ASLEEP);
+      var c = (t - FALL_ASLEEP) / CYCLE, k = Math.floor(c), f = c - k;
+      var deep = bottom - Math.min(k, 4) * 9;            // deep sleep gets shallower through the night
+      var g = f < 0.45 ? (f / 0.45) * 0.5 : 0.5 + ((f - 0.45) / 0.55) * 0.5;
+      var s = Math.pow(Math.sin(Math.PI * g), 2);   // smooth rise and fall, deepest early in each cycle
+      return light + (deep - light) * s;
+    }
+    var d = "M" + pts.map(function (p) { return sx(p[0]).toFixed(1) + " " + p[1].toFixed(1); }).join(" L");
+    var area = d + " L" + sx(total).toFixed(1) + " " + H + " L" + x0 + " " + H + " Z";
+    var ex = sx(total), ey = depthAt(total);
+    var ticks = "";
+    for (var c = FALL_ASLEEP + CYCLE; c < total - 1; c += CYCLE) {
+      ticks += '<line x1="' + sx(c).toFixed(1) + '" y1="' + (light - 6) + '" x2="' + sx(c).toFixed(1) + '" y2="' + (H - 2) + '" stroke="rgba(236,233,255,.07)" stroke-dasharray="2 4"/>';
+    }
+    svg.innerHTML =
+      '<defs>' +
+        '<linearGradient id="g-' + svg.id + '" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#8F7BFF"/><stop offset="1" stop-color="#5CD6FF"/></linearGradient>' +
+        '<linearGradient id="f-' + svg.id + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#8F7BFF" stop-opacity=".22"/><stop offset="1" stop-color="#8F7BFF" stop-opacity="0"/></linearGradient>' +
+        '<radialGradient id="r-' + svg.id + '"><stop offset="0" stop-color="#FFC47A" stop-opacity=".55"/><stop offset="1" stop-color="#FFC47A" stop-opacity="0"/></radialGradient>' +
+      '</defs>' +
+      ticks +
+      '<path d="' + area + '" fill="url(#f-' + svg.id + ')"/>' +
+      '<path d="' + d + '" fill="none" stroke="url(#g-' + svg.id + ')" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + x0 + '" cy="' + top + '" r="3.5" fill="#ECE9FF"/>' +
+      '<circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="16" fill="url(#r-' + svg.id + ')"/>' +
+      '<circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="5.5" fill="#FFC47A"/>';
+  }
+
+  /* ---------- Home ---------- */
+  function greetIndex(h) { return h >= 5 && h < 12 ? 0 : h >= 12 && h < 18 ? 1 : h >= 18 && h < 22 ? 2 : 3; }
+  var lastMinute = -1;
+  function renderHome(force) {
+    var now = nowMinutes();
+    if (!force && now === lastMinute) return;
+    lastMinute = now;
+    $("h-greet").textContent = U.greet[greetIndex(Math.floor(now / 60))];
+    $("h-clock").innerHTML = timeHTML(now);
+    var total = FALL_ASLEEP + CYCLE * homeCycles;
+    $("h-time").innerHTML = timeHTML(now + total);
+    $("h-dur").innerHTML = esc(U.sleepLbl) + esc(U.sep || ": ") + "<b>" + esc(durText(CYCLE * homeCycles)) + "</b>";
+    drawHypno($("h-hypno"), total);
+    var chips = $("h-chips"); chips.innerHTML = "";
+    [4, 5, 6].forEach(function (c) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip";
+      b.setAttribute("aria-pressed", c === homeCycles ? "true" : "false");
+      b.innerHTML = '<span class="t">' + timeHTML(now + FALL_ASLEEP + CYCLE * c) + '</span><span class="d">' + esc(durText(CYCLE * c)) + "</span>";
+      b.addEventListener("click", function () { homeCycles = c; renderHome(true); });
+      chips.appendChild(b);
+    });
+  }
+  function renderFeature() {
+    var day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
+    var tech = TECH[day % TECH.length], tx = techText(tech.id);
+    var f = $("h-feature");
+    f.innerHTML = "";
+    var h = document.createElement("h3"); h.textContent = tx.t; f.appendChild(h);
+    f.appendChild(metaEl(tech));
+    var p = document.createElement("p"); p.className = "muted"; p.textContent = tx.d; f.appendChild(p);
+    var a = document.createElement("a"); a.className = "primary"; a.href = "#/tech/" + tech.id; a.textContent = U.tryIt;
+    a.style.textDecoration = "none"; f.appendChild(a);
+  }
+
+  /* ---------- Alarm ---------- */
+  function calc() {
+    var sleep = $("spac").value, wake = $("obudzic").value;
+    if (!sleep || !wake) return;
+    store("sleepBed", sleep); store("sleepWake", wake);
+    var off = alarmOffset(toMinutes(sleep), toMinutes(wake));
+    $("a-time").innerHTML = timeHTML(toMinutes(sleep) + off);
+    $("a-dur").innerHTML = esc(U.sleepLbl) + esc(U.sep || ": ") + "<b>" + esc(durText(Math.max(0, off - FALL_ASLEEP))) + "</b>";
+    drawHypno($("a-hypno"), off);
+  }
+
+  /* ---------- Techniques ---------- */
+  function techText(id) { return (TECH_TEXT[lang] && TECH_TEXT[lang][id]) || TECH_TEXT.en[id]; }
+  function metaEl(tech) {
+    var m = document.createElement("div"); m.className = "meta";
+    var s = document.createElement("span"); s.textContent = durText(tech.min); m.appendChild(s);
+    if (tech.guide) { var g = document.createElement("span"); g.className = "tag"; g.textContent = U.guided; m.appendChild(g); }
+    return m;
+  }
+  function renderTechList() {
+    var ul = $("t-list"); ul.innerHTML = "";
+    TECH.forEach(function (tech) {
+      var tx = techText(tech.id);
+      var li = document.createElement("li");
+      var a = document.createElement("a"); a.className = "trow"; a.href = "#/tech/" + tech.id;
+      var h = document.createElement("h3"); h.textContent = tx.t;
+      var d = document.createElement("p"); d.className = "d"; d.textContent = tx.d;
+      var side = document.createElement("span"); side.className = "side";
+      side.innerHTML = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+      var mm = document.createElement("span"); mm.textContent = durText(tech.min); side.insertBefore(mm, side.firstChild);
+      a.appendChild(h); a.appendChild(side); a.appendChild(d);
+      li.appendChild(a); ul.appendChild(li);
+    });
+  }
+  var current = null;
+  function renderDetail(id) {
+    var tech = TECH.filter(function (t) { return t.id === id; })[0];
+    if (!tech) { location.hash = "#/tech"; return; }
+    current = tech;
+    var tx = techText(id);
+    $("d-back-t").textContent = U.back;
+    $("d-title").textContent = tx.t;
+    var meta = $("d-meta"); meta.replaceWith(metaEl(tech)); document.querySelector("#v-detail .meta").id = "d-meta";
+    $("d-why").textContent = tx.w;
+    $("d-how").textContent = U.howTo;
+    var ol = $("d-steps"); ol.innerHTML = "";
+    tx.s.forEach(function (s) { var li = document.createElement("li"); var sp = document.createElement("span"); sp.textContent = s; li.appendChild(sp); ol.appendChild(li); });
+    $("d-disc").textContent = U.disclaimer;
+    var br = $("d-breath");
+    br.hidden = !tech.guide;
+    if (tech.guide) breathReset();
+  }
+
+  /* ---------- Guided breathing ---------- */
+  var B = { on: false, timers: [] };
+  function later(fn, ms) { B.timers.push(setTimeout(fn, ms)); }
+  function breathReset() {
+    B.timers.forEach(clearTimeout); B.timers = []; B.on = false;
+    var orb = $("orb"); orb.style.transitionDuration = "0.8s"; orb.style.transform = "scale(.5)";
+    $("orb-ph").textContent = ""; $("orb-n").textContent = "";
+    $("orb-r").textContent = current && current.guide ? U.round.replace("{n}", "1").replace("{t}", current.guide.rounds) : "";
+    $("orb-btn").textContent = U.start;
+  }
+  function breathStart() {
+    var g = current.guide; B.on = true;
+    $("orb-btn").textContent = U.stop;
+    var t = 0, orb = $("orb");
+    for (var r = 0; r < g.rounds; r++) {
+      g.phases.forEach(function (ph) {
+        var kind = ph[0], sec = ph[1], round = r;
+        later(function () {
+          $("orb-r").textContent = U.round.replace("{n}", round + 1).replace("{t}", g.rounds);
+          $("orb-ph").textContent = kind === "in" ? U.pIn : kind === "out" ? U.pOut : U.pHold;
+          orb.style.transitionDuration = sec + "s";
+          if (kind === "in") orb.style.transform = "scale(1)";
+          if (kind === "out") orb.style.transform = "scale(.5)";
+          for (var i = 0; i < sec; i++) (function (left) { later(function () { $("orb-n").textContent = left; }, (sec - left) * 1000); })(sec - i);
+        }, t * 1000);
+        t += sec;
+      });
+    }
+    later(function () {
+      B.on = false;
+      $("orb-ph").textContent = ""; $("orb-n").textContent = "";
+      $("orb-r").textContent = U.done;
+      $("orb-btn").textContent = U.start;
+    }, t * 1000);
+  }
+  $("orb-btn").addEventListener("click", function () { if (B.on) breathReset(); else { breathReset(); breathStart(); } });
+
+  /* ---------- Language ---------- */
+  function pickLang() {
+    var saved = store("sleepLang");
+    if (saved && UI[saved]) return saved;
+    var nav = (navigator.language || "en").slice(0, 2).toLowerCase();
+    return UI[nav] ? nav : "en";
+  }
+  function applyLang(code) {
+    lang = UI[code] ? code : "en"; U = UI[lang];
+    store("sleepLang", lang);
+    document.documentElement.lang = lang;
+    document.title = U.name;
+    $("langSel").value = lang;
+    $("h-brand").textContent = U.name;
+    $("h-lead").textContent = U.nowLead;
+    $("h-note").textContent = U.note7;
+    $("h-plan").textContent = U.planOther;
+    $("h-stuck").textContent = U.stuck;
+    $("h-all").textContent = U.allTech;
+    $("a-title").textContent = U.title;
+    $("a-sub").textContent = U.sub;
+    $("a-bed").textContent = U.bed;
+    $("a-wake").textContent = U.wake;
+    $("calc").textContent = U.btn;
+    $("a-res").textContent = U.res;
+    $("a-hint").textContent = U.hint;
+    $("a-foot").innerHTML = U.foot;
+    $("t-title").textContent = U.techTitle;
+    $("t-intro").textContent = U.techIntro;
+    $("t-disc").textContent = U.disclaimer;
+    $("tab-home").textContent = U.tabHome;
+    $("tab-alarm").textContent = U.tabAlarm;
+    $("tab-tech").textContent = U.tabTech;
+    renderFeature();
+    renderTechList();
+    route();
+  }
+
+  /* ---------- Routing (#/, #/alarm, #/tech, #/tech/<id>) ---------- */
+  function show(id) {
+    ["v-home", "v-alarm", "v-tech", "v-detail"].forEach(function (v) { $(v).hidden = v !== id; });
+  }
+  function route() {
+    var h = location.hash.replace(/^#\/?/, "").split("/");
+    var view = h[0] || "home", tab = view;
+    if (view !== "tech" || !h[1]) { if (B.on || B.timers.length) breathReset(); }
+    if (view === "alarm") { show("v-alarm"); calc(); }
+    else if (view === "tech" && h[1]) { show("v-detail"); renderDetail(h[1]); tab = "tech"; }
+    else if (view === "tech") { show("v-tech"); }
+    else { show("v-home"); tab = "home"; renderHome(true); }
+    document.querySelectorAll(".tabs a").forEach(function (a) {
+      if (a.getAttribute("data-tab") === tab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+  }
+  var navigatedInApp = false;
+  window.addEventListener("hashchange", function () {
+    navigatedInApp = true;
+    route();
+    window.scrollTo(0, 0);
+  });
+  // Back goes to the previous screen; if the app was opened straight on a technique, it goes to the list.
+  $("d-back").addEventListener("click", function () {
+    if (navigatedInApp) history.back(); else location.hash = "#/tech";
+  });
+
+  /* ---------- Events ---------- */
+  $("calc").addEventListener("click", calc);
+  $("spac").addEventListener("change", calc);
+  $("obudzic").addEventListener("change", calc);
+  $("langSel").addEventListener("change", function (e) { applyLang(e.target.value); });
+  window.addEventListener("resize", function () { if (!$("v-home").hidden) renderHome(true); else if (!$("v-alarm").hidden) calc(); });
+  setInterval(function () { if (!$("v-home").hidden) renderHome(false); }, 10000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && !$("v-home").hidden) renderHome(true); });
+
+  var b = store("sleepBed"), w = store("sleepWake");
+  if (b) $("spac").value = b;
+  if (w) $("obudzic").value = w;
+
+  applyLang(pickLang());
+
+  // Service worker: keeps the app working offline.
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+})();
+</script>
+</body>
+</html>
