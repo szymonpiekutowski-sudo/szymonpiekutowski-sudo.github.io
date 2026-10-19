@@ -1,9 +1,8 @@
 [{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "io.github.szymonpiekutowski_sudo.sleepphases",
-        "sha256_cert_fingerprints": ["8E:8F:13:F7:26:18:2A:4A:59:5E:38:8B:EB:A4:1C:90:83:03:F4:57:CA:FF:0B:34:E5:6E:BE:7B:B7:29:05:A1"]
-      }
-    }]
-
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.szymonpiekutowski_sudo.sleepphases",
+    "sha256_cert_fingerprints": ["8E:8F:13:F7:26:18:2A:4A:59:5E:38:8B:EB:A4:1C:90:83:03:F4:57:CA:FF:0B:34:E5:6E:BE:7B:B7:29:05:A1"]
+  }
+}]
