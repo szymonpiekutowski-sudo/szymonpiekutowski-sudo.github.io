@@ -9,11 +9,17 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&display=swap">
+<link rel="preload" href="alegreya.woff" as="font" type="font/woff" crossorigin>
 <title>Sleep Phases</title>
 <style>
+  /* Alegreya (SIL Open Font License, see alegreya-OFL.txt), bundled so the app needs no outside servers. */
+  @font-face {
+    font-family: "Alegreya";
+    src: url("alegreya.woff") format("woff");
+    font-weight: 400 900;
+    font-style: normal;
+    font-display: swap;
+  }
   :root {
     color-scheme: dark;
     --night: #0E1230;
@@ -84,6 +90,8 @@
   .greet { font-size: 1.15rem; color: var(--haze); font-family: var(--display); font-weight: 500; }
   .clock { font-family: var(--display); font-weight: 700; font-size: clamp(4.2rem, 22vw, 5.8rem); line-height: .95; margin: 2px 0 30px; font-variant-numeric: lining-nums tabular-nums; }
   .clock .ap, .bigtime .ap { font-size: .32em; margin-left: .25em; font-weight: 500; color: var(--haze); }
+  .clock .ap.pre, .bigtime .ap.pre { margin-left: 0; margin-right: .25em; }
+  .chip .t .ap.pre { margin-left: 0; margin-right: .15em; }
 
   .plan { border-top: 1px solid var(--line); padding-top: 22px; }
   .lead { color: var(--haze); max-width: 30ch; }
@@ -203,6 +211,10 @@
   .tabs a svg { width: 22px; height: 22px; }
   .tabs a[aria-current="page"] { color: var(--moon); }
   .tabs a[aria-current="page"] svg { color: var(--dawn); }
+
+  /* Line breaks that respect words in Japanese and Korean. */
+  :lang(ja) h1, :lang(ja) h2, :lang(ja) h3, :lang(ja) .lead { word-break: auto-phrase; }
+  :lang(ko) body { word-break: keep-all; }
 
   @media (prefers-reduced-motion: reduce) {
     .orb { transition-duration: 0s !important; }
@@ -349,13 +361,16 @@
     try { parts = new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).formatToParts(d); }
     catch (e) { parts = null; }
     if (!parts) { var h = d.getHours(), m = d.getMinutes(); return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m; }
-    var out = "", ap = "";
-    parts.forEach(function (p) {
-      if (p.type === "dayPeriod") ap = p.value;
-      else if (p.type === "literal" && /^\s+$/.test(p.value)) { /* drop space before AM/PM */ }
-      else out += p.value;
+    // Keep the locale's order (e.g. "11:04 PM" or "오후 11:04"), with AM/PM set smaller.
+    var out = "", seenDigits = false;
+    parts.forEach(function (p, i) {
+      var nextAp = parts[i + 1] && parts[i + 1].type === "dayPeriod";
+      var prevAp = parts[i - 1] && parts[i - 1].type === "dayPeriod";
+      if (p.type === "dayPeriod") out += '<span class="ap' + (seenDigits ? "" : " pre") + '">' + esc(p.value) + "</span>";
+      else if (p.type === "literal" && /^\s+$/.test(p.value) && (nextAp || prevAp)) { /* spacing comes from CSS */ }
+      else { if (p.type === "hour") seenDigits = true; out += esc(p.value); }
     });
-    return esc(out) + (ap ? '<span class="ap">' + esc(ap) + "</span>" : "");
+    return out;
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function durText(min) {
