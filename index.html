@@ -64,7 +64,7 @@
     max-width: 460px; margin: 0 auto;
     padding: max(20px, env(safe-area-inset-top)) 20px calc(var(--tabbar) + 32px + env(safe-area-inset-bottom));
   }
-  .view[hidden] { display: none; }
+  .view[hidden], [hidden] { display: none !important; }
   h1, h2, h3, .display { font-family: var(--display); font-weight: 700; letter-spacing: 0; margin: 0; }
   p { margin: 0; }
   button { font: inherit; color: inherit; }
@@ -127,21 +127,39 @@
     display: grid; gap: 6px;
   }
   .feature h3 { font-size: 1.35rem; }
-  .meta { display: flex; gap: 10px; align-items: center; font-size: .82rem; color: var(--haze); }
+  .meta { display: flex; gap: 10px; align-items: center; font-size: .82rem; color: var(--haze); flex-wrap: wrap; }
   .tag { border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; }
   .primary {
-    margin-top: 10px; justify-self: start;
+    margin-top: 10px; justify-self: start; display: inline-block; text-decoration: none;
     background: var(--moon); color: var(--night);
     border: 0; border-radius: 999px; padding: 11px 20px; font-weight: 700; cursor: pointer;
   }
   .primary:active { transform: translateY(1px); }
+  .primary[disabled] { opacity: .45; cursor: default; }
+
+  /* Premium marker */
+  .lockpill {
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+    font-size: .72rem; font-weight: 600; color: var(--dawn);
+    border: 1px solid rgba(255, 196, 122, .35); border-radius: 999px; padding: 1px 8px 1px 6px;
+  }
+  .lockpill svg { width: 11px; height: 11px; }
+
+  /* Home tiles for plan and diary */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile {
+    background: var(--dusk); border-radius: 18px; padding: 16px;
+    text-decoration: none; color: inherit; display: grid; gap: 6px; align-content: start; min-height: 112px;
+  }
+  .tile h3 { font-size: 1.15rem; line-height: 1.2; }
+  .tile p { color: var(--haze); font-size: .88rem; }
 
   /* Alarm view */
   .pagehead { margin-bottom: 24px; }
   .pagehead h1 { font-size: 2rem; line-height: 1.15; }
   .pagehead p { color: var(--haze); margin-top: 6px; }
   .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: .9rem; color: var(--haze); margin-bottom: 6px; }
+  .field label, .flabel { display: block; font-size: .9rem; color: var(--haze); margin-bottom: 6px; }
   input[type="time"] {
     -webkit-appearance: none; appearance: none;
     width: 100%; padding: 12px 16px; font-size: 1.6rem;
@@ -167,11 +185,14 @@
   .trow .d { grid-column: 1; color: var(--haze); font-size: .92rem; }
   .trow .side { grid-row: 1 / span 2; grid-column: 2; display: grid; justify-items: end; gap: 6px; font-size: .8rem; color: var(--haze); }
   .trow .chev { width: 18px; height: 18px; color: var(--haze); }
+  .planlink { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 12px; margin-bottom: 18px; color: inherit; text-decoration: none; }
+  .planlink h3 { font-size: 1.25rem; }
 
   /* Technique detail */
   .back { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 6px 0; margin-bottom: 18px; color: var(--haze); cursor: pointer; }
   .detail h1 { font-size: 2.1rem; line-height: 1.1; margin-bottom: 10px; }
   .why { margin: 14px 0 0; color: var(--moon); max-width: 60ch; }
+  .lockbox { margin-top: 26px; }
 
   .breath { margin: 30px 0 6px; display: grid; justify-items: center; gap: 14px; }
   .orb-wrap { position: relative; width: 220px; height: 220px; display: grid; place-items: center; }
@@ -195,6 +216,52 @@
   .steps li::before { content: counter(s); font-family: var(--display); font-weight: 700; color: var(--lav); font-size: 1.15rem; line-height: 1.35; }
   .disclaimer { margin-top: 30px; font-size: .8rem; color: var(--haze); }
 
+  /* Sounds */
+  .slist { list-style: none; margin: 0; padding: 0; }
+  .slist li + li { border-top: 1px solid var(--line); }
+  .srow { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 14px; padding: 12px 0; width: 100%; background: none; border: 0; text-align: left; cursor: pointer; }
+  .pbtn { width: 48px; height: 48px; border-radius: 50%; background: var(--dusk-2); display: grid; place-items: center; color: var(--moon); }
+  .pbtn svg { width: 20px; height: 20px; }
+  .srow .name { font-family: var(--display); font-weight: 700; font-size: 1.2rem; }
+  .srow[aria-pressed="true"] .pbtn { background: var(--dawn); color: var(--night); }
+  .srow[aria-pressed="true"] .name { color: var(--dawn); }
+  .tchips { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 22px; }
+  .tchip { background: var(--dusk); border: 1px solid transparent; border-radius: 999px; padding: 7px 14px; cursor: pointer; font-size: .9rem; }
+  .tchip[aria-pressed="true"] { border-color: var(--dawn); color: var(--dawn); background: var(--dusk-2); }
+
+  /* Plan */
+  .dots { display: grid; grid-template-columns: repeat(14, 1fr); gap: 5px; margin: 4px 0 22px; }
+  .dots span { height: 6px; border-radius: 3px; background: var(--dusk-2); }
+  .dots span.done { background: var(--lav); }
+  .dots span.now { background: var(--dawn); }
+  .card { background: var(--dusk); border-radius: 20px; padding: 20px; display: grid; gap: 8px; }
+  .card h2 { font-size: 1.5rem; }
+  .card h3 { font-size: .95rem; font-family: var(--body); color: var(--haze); font-weight: 600; margin-top: 8px; }
+  .card .tip { font-size: 1.02rem; }
+  .card .techlink { color: var(--sky); text-decoration: none; font-weight: 600; }
+  .note { color: var(--haze); margin-top: 12px; min-height: 1.5em; }
+
+  /* Diary */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rate { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 18px; }
+  .rate button { background: var(--dusk); border: 1px solid transparent; border-radius: 12px; padding: 10px 2px; cursor: pointer; font-size: .72rem; line-height: 1.2; color: var(--haze); display: grid; gap: 4px; justify-items: center; }
+  .rate button b { font-family: var(--display); font-size: 1.3rem; color: var(--moon); }
+  .rate button[aria-pressed="true"] { border-color: var(--dawn); background: var(--dusk-2); }
+  .rate button[aria-pressed="true"] b { color: var(--dawn); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 8px; }
+  .stat { background: var(--dusk); border-radius: 16px; padding: 14px; }
+  .stat .v { font-family: var(--display); font-weight: 700; font-size: 1.6rem; line-height: 1.1; }
+  .stat .l { color: var(--haze); font-size: .82rem; }
+  .bars { display: block; width: 100%; height: 150px; margin-top: 8px; }
+
+  /* Premium */
+  .pw-moon { display: block; width: 64px; height: 64px; border-radius: 18px; margin-bottom: 16px; }
+  .pw-list { list-style: none; padding: 0; margin: 22px 0 6px; display: grid; gap: 14px; }
+  .pw-list li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+  .pw-list svg { width: 22px; height: 22px; color: var(--dawn); margin-top: 1px; }
+  .pw-once { color: var(--haze); font-size: .85rem; text-align: center; margin-top: 10px; }
+  .pw-status { margin-top: 16px; min-height: 1.5em; text-align: center; }
+
   /* Bottom tab bar */
   .tabs {
     position: fixed; z-index: 5; left: 0; right: 0; bottom: 0;
@@ -203,10 +270,10 @@
     border-top: 1px solid var(--line);
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .tabs nav { max-width: 460px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); height: var(--tabbar); }
+  .tabs nav { max-width: 460px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); height: var(--tabbar); }
   .tabs a {
     display: grid; justify-items: center; align-content: center; gap: 3px;
-    color: var(--haze); text-decoration: none; font-size: .75rem;
+    color: var(--haze); text-decoration: none; font-size: .72rem; text-align: center; padding: 0 2px;
   }
   .tabs a svg { width: 22px; height: 22px; }
   .tabs a[aria-current="page"] { color: var(--moon); }
@@ -254,6 +321,14 @@
     </div>
 
     <div class="section">
+      <h2 id="h-yours"></h2>
+      <div class="tiles">
+        <a class="tile" href="#/plan" id="h-tile-plan"></a>
+        <a class="tile" href="#/diary" id="h-tile-diary"></a>
+      </div>
+    </div>
+
+    <div class="section">
       <h2 id="h-stuck"></h2>
       <div class="feature" id="h-feature"></div>
       <a class="linkbtn" href="#/tech" id="h-all"></a>
@@ -292,19 +367,22 @@
       <h1 id="t-title"></h1>
       <p id="t-intro"></p>
     </header>
+    <a class="feature planlink" href="#/plan" id="t-plan"></a>
     <ul class="tlist" id="t-list"></ul>
     <p class="disclaimer" id="t-disc"></p>
   </section>
 
   <!-- TECHNIQUE DETAIL -->
   <section class="view detail" id="v-detail" hidden>
-    <button class="back" type="button" id="d-back">
+    <button class="back" type="button" data-back="#/tech">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-      <span id="d-back-t"></span>
+      <span class="back-t"></span>
     </button>
     <h1 id="d-title"></h1>
     <div class="meta" id="d-meta"></div>
     <p class="why" id="d-why"></p>
+
+    <div class="lockbox feature" id="d-lock" hidden></div>
 
     <div class="breath" id="d-breath" hidden>
       <div class="orb-wrap">
@@ -316,11 +394,82 @@
       <button class="primary" type="button" id="orb-btn"></button>
     </div>
 
-    <div class="steps">
+    <div class="steps" id="d-stepsbox">
       <h2 id="d-how"></h2>
       <ol id="d-steps"></ol>
     </div>
     <p class="disclaimer" id="d-disc"></p>
+  </section>
+
+  <!-- SOUNDS -->
+  <section class="view" id="v-sounds" hidden>
+    <header class="pagehead">
+      <h1 id="s-title"></h1>
+      <p id="s-sub"></p>
+    </header>
+    <p class="flabel" id="s-timer-l"></p>
+    <div class="tchips" id="s-timer"></div>
+    <ul class="slist" id="s-list"></ul>
+  </section>
+
+  <!-- PLAN -->
+  <section class="view" id="v-plan" hidden>
+    <button class="back" type="button" data-back="#/">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="back-t"></span>
+    </button>
+    <header class="pagehead">
+      <h1 id="p-title"></h1>
+      <p id="p-intro"></p>
+    </header>
+    <div class="dots" id="p-dots" aria-hidden="true"></div>
+    <div class="card" id="p-card"></div>
+    <p class="note" id="p-note" aria-live="polite"></p>
+  </section>
+
+  <!-- DIARY -->
+  <section class="view" id="v-diary" hidden>
+    <button class="back" type="button" data-back="#/">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="back-t"></span>
+    </button>
+    <header class="pagehead">
+      <h1 id="y-title"></h1>
+      <p id="y-intro"></p>
+    </header>
+    <div class="two">
+      <div class="field"><label for="y-bed" id="y-bed-l"></label><input type="time" id="y-bed" value="23:00"></div>
+      <div class="field"><label for="y-wake" id="y-wake-l"></label><input type="time" id="y-wake" value="07:00"></div>
+    </div>
+    <p class="flabel" id="y-q"></p>
+    <div class="rate" id="y-rate"></div>
+    <button class="primary wide" type="button" id="y-save"></button>
+    <p class="note" id="y-note" aria-live="polite"></p>
+
+    <div class="section">
+      <h2 id="y-week"></h2>
+      <div class="stats" id="y-stats"></div>
+      <svg class="bars" id="y-bars" role="img"></svg>
+      <p class="muted" id="y-empty"></p>
+    </div>
+  </section>
+
+  <!-- PREMIUM -->
+  <section class="view" id="v-premium" hidden>
+    <button class="back" type="button" data-back="#/">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="back-t"></span>
+    </button>
+    <img class="pw-moon" src="icon-192.png" alt="">
+    <header class="pagehead">
+      <h1 id="w-title"></h1>
+      <p id="w-sub"></p>
+    </header>
+    <ul class="pw-list" id="w-list"></ul>
+    <button class="primary wide" type="button" id="w-buy"></button>
+    <p class="pw-once" id="w-once"></p>
+    <p class="pw-status" id="w-status" aria-live="polite"></p>
+    <p style="text-align:center"><button class="linkbtn" type="button" id="w-restore"></button></p>
   </section>
 </main>
 
@@ -338,18 +487,36 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9c2.5-2 4.5-2 7 0s4.5 2 7 0 2.5-1 4-1M3 15c2.5-2 4.5-2 7 0s4.5 2 7 0 2.5-1 4-1"/></svg>
       <span id="tab-tech"></span>
     </a>
+    <a href="#/sounds" data-tab="sounds">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>
+      <span id="tab-sounds"></span>
+    </a>
   </nav>
 </div>
 
 <script src="i18n.js"></script>
+<script src="i18n-premium.js"></script>
+<script src="sounds.js"></script>
+<script src="premium.js"></script>
 <script>
 (function () {
   var FALL_ASLEEP = 7, CYCLE = 90;
+  var FREE_TECH = { "478": true, "box": true, "rule20": true };
+  var FREE_SOUND = { "white": true };
   var lang = "en", U = UI.en;
   var homeCycles = 5;
 
+  var LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  var PLAY_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+  var STOP_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="2"/></svg>';
+  var CHEV_SVG = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+
   function $(id) { return document.getElementById(id); }
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function storeJSON(k, v) { if (v === undefined) { try { return JSON.parse(store(k) || "null"); } catch (e) { return null; } } store(k, JSON.stringify(v)); }
+  function isPremium() { return Premium.state().active; }
+  function lockPill() { return '<span class="lockpill">' + LOCK_SVG + esc(U.lockTag) + "</span>"; }
 
   /* ---------- Time helpers ---------- */
   var locale = (navigator.languages && navigator.languages[0]) || navigator.language || "en";
@@ -375,6 +542,7 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function durText(min) {
     var h = Math.floor(min / 60), m = Math.round(min % 60), u = U.u;
+    if (m === 60) { h += 1; m = 0; }
     var ns = (u.tight || u.attach) ? "" : " ";   // space between number and unit
     var ps = u.tight ? "" : " ";                 // space between hours and minutes
     if (!h) return m + ns + u.m;
@@ -383,6 +551,8 @@
   }
   function toMinutes(v) { var p = v.split(":"); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); }
   function nowMinutes() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+  function dateKey(d) { return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  function lbl(text) { return esc(text) + esc(U.sep || ": "); }
 
   // Same logic as the original calculator: returns minutes from bedtime to alarm.
   function alarmOffset(sleepMin, wakeMin) {
@@ -445,7 +615,7 @@
     $("h-clock").innerHTML = timeHTML(now);
     var total = FALL_ASLEEP + CYCLE * homeCycles;
     $("h-time").innerHTML = timeHTML(now + total);
-    $("h-dur").innerHTML = esc(U.sleepLbl) + esc(U.sep || ": ") + "<b>" + esc(durText(CYCLE * homeCycles)) + "</b>";
+    $("h-dur").innerHTML = lbl(U.sleepLbl) + "<b>" + esc(durText(CYCLE * homeCycles)) + "</b>";
     drawHypno($("h-hypno"), total);
     var chips = $("h-chips"); chips.innerHTML = "";
     [4, 5, 6].forEach(function (c) {
@@ -456,17 +626,27 @@
       b.addEventListener("click", function () { homeCycles = c; renderHome(true); });
       chips.appendChild(b);
     });
+    renderTiles();
+  }
+  function renderTiles() {
+    var plan = planState(), diary = diaryAverages();
+    var lock = isPremium() ? "" : lockPill();
+    $("h-tile-plan").innerHTML = "<h3>" + esc(U.planTitle) + "</h3><p>" +
+      esc(plan.done.length >= 14 ? U.planRestart : U.planProgress.replace("{n}", Math.min(14, plan.done.length + 1))) + "</p>" + lock;
+    $("h-tile-diary").innerHTML = "<h3>" + esc(U.diaryTitle) + "</h3><p>" +
+      (diary.count ? lbl(U.diaryAvg) + esc(durText(diary.avgMin)) : esc(U.diaryLogLast)) + "</p>" + lock;
   }
   function renderFeature() {
     var day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
-    var tech = TECH[day % TECH.length], tx = techText(tech.id);
+    var pool = isPremium() ? TECH : TECH.filter(function (t) { return FREE_TECH[t.id]; });
+    var tech = pool[day % pool.length], tx = techText(tech.id);
     var f = $("h-feature");
     f.innerHTML = "";
     var h = document.createElement("h3"); h.textContent = tx.t; f.appendChild(h);
     f.appendChild(metaEl(tech));
     var p = document.createElement("p"); p.className = "muted"; p.textContent = tx.d; f.appendChild(p);
     var a = document.createElement("a"); a.className = "primary"; a.href = "#/tech/" + tech.id; a.textContent = U.tryIt;
-    a.style.textDecoration = "none"; f.appendChild(a);
+    f.appendChild(a);
   }
 
   /* ---------- Alarm ---------- */
@@ -476,19 +656,25 @@
     store("sleepBed", sleep); store("sleepWake", wake);
     var off = alarmOffset(toMinutes(sleep), toMinutes(wake));
     $("a-time").innerHTML = timeHTML(toMinutes(sleep) + off);
-    $("a-dur").innerHTML = esc(U.sleepLbl) + esc(U.sep || ": ") + "<b>" + esc(durText(Math.max(0, off - FALL_ASLEEP))) + "</b>";
+    $("a-dur").innerHTML = lbl(U.sleepLbl) + "<b>" + esc(durText(Math.max(0, off - FALL_ASLEEP))) + "</b>";
     drawHypno($("a-hypno"), off);
   }
 
   /* ---------- Techniques ---------- */
   function techText(id) { return (TECH_TEXT[lang] && TECH_TEXT[lang][id]) || TECH_TEXT.en[id]; }
+  function techLocked(id) { return !isPremium() && !FREE_TECH[id]; }
   function metaEl(tech) {
     var m = document.createElement("div"); m.className = "meta";
     var s = document.createElement("span"); s.textContent = durText(tech.min); m.appendChild(s);
     if (tech.guide) { var g = document.createElement("span"); g.className = "tag"; g.textContent = U.guided; m.appendChild(g); }
+    if (techLocked(tech.id)) { var l = document.createElement("span"); l.innerHTML = lockPill(); m.appendChild(l.firstChild); }
     return m;
   }
   function renderTechList() {
+    var plan = planState();
+    $("t-plan").innerHTML = "<div><h3>" + esc(U.planTitle) + '</h3><p class="muted small">' +
+      esc(plan.done.length >= 14 ? U.planRestart : U.planProgress.replace("{n}", Math.min(14, plan.done.length + 1))) +
+      "</p></div>" + (isPremium() ? CHEV_SVG : lockPill());
     var ul = $("t-list"); ul.innerHTML = "";
     TECH.forEach(function (tech) {
       var tx = techText(tech.id);
@@ -497,8 +683,7 @@
       var h = document.createElement("h3"); h.textContent = tx.t;
       var d = document.createElement("p"); d.className = "d"; d.textContent = tx.d;
       var side = document.createElement("span"); side.className = "side";
-      side.innerHTML = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-      var mm = document.createElement("span"); mm.textContent = durText(tech.min); side.insertBefore(mm, side.firstChild);
+      side.innerHTML = (techLocked(tech.id) ? lockPill() : "<span>" + esc(durText(tech.min)) + "</span>") + CHEV_SVG;
       a.appendChild(h); a.appendChild(side); a.appendChild(d);
       li.appendChild(a); ul.appendChild(li);
     });
@@ -506,20 +691,23 @@
   var current = null;
   function renderDetail(id) {
     var tech = TECH.filter(function (t) { return t.id === id; })[0];
-    if (!tech) { location.hash = "#/tech"; return; }
+    if (!tech) { location.replace("#/tech"); return; }
     current = tech;
-    var tx = techText(id);
-    $("d-back-t").textContent = U.back;
+    var tx = techText(id), locked = techLocked(id);
     $("d-title").textContent = tx.t;
-    var meta = $("d-meta"); meta.replaceWith(metaEl(tech)); document.querySelector("#v-detail .meta").id = "d-meta";
+    var meta = $("d-meta"), m2 = metaEl(tech); m2.id = "d-meta"; meta.replaceWith(m2);
     $("d-why").textContent = tx.w;
     $("d-how").textContent = U.howTo;
     var ol = $("d-steps"); ol.innerHTML = "";
     tx.s.forEach(function (s) { var li = document.createElement("li"); var sp = document.createElement("span"); sp.textContent = s; li.appendChild(sp); ol.appendChild(li); });
     $("d-disc").textContent = U.disclaimer;
-    var br = $("d-breath");
-    br.hidden = !tech.guide;
-    if (tech.guide) breathReset();
+    $("d-lock").hidden = !locked;
+    $("d-stepsbox").hidden = locked;
+    if (locked) {
+      $("d-lock").innerHTML = lockPill() + "<p>" + esc(U.pwF[1]) + '</p><a class="primary" href="#/premium">' + esc(U.unlock) + "</a>";
+    }
+    $("d-breath").hidden = locked || !tech.guide;
+    if (tech.guide && !locked) breathReset();
   }
 
   /* ---------- Guided breathing ---------- */
@@ -559,6 +747,181 @@
   }
   $("orb-btn").addEventListener("click", function () { if (B.on) breathReset(); else { breathReset(); breathStart(); } });
 
+  /* ---------- Sounds ---------- */
+  var TIMERS = [15, 30, 60, 0];
+  function soundTimer() { var v = parseInt(store("sleepTimer"), 10); return TIMERS.indexOf(v) >= 0 ? v : 30; }
+  function renderSounds() {
+    var tc = $("s-timer"); tc.innerHTML = "";
+    TIMERS.forEach(function (m) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "tchip";
+      b.textContent = m ? durText(m) : U.sndNoTimer;
+      b.setAttribute("aria-pressed", m === soundTimer() ? "true" : "false");
+      b.addEventListener("click", function () {
+        store("sleepTimer", String(m));
+        if (SleepSounds.current()) SleepSounds.setTimer(m);
+        renderSounds();
+      });
+      tc.appendChild(b);
+    });
+    var ul = $("s-list"); ul.innerHTML = "";
+    SleepSounds.ids.forEach(function (id) {
+      var li = document.createElement("li");
+      var b = document.createElement("button");
+      var on = SleepSounds.current() === id, locked = !isPremium() && !FREE_SOUND[id];
+      b.type = "button"; b.className = "srow";
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.setAttribute("aria-label", (on ? U.sndStop : U.sndPlay) + ": " + U.snd[id]);
+      b.innerHTML = '<span class="pbtn">' + (on ? STOP_SVG : PLAY_SVG) + '</span><span class="name">' + esc(U.snd[id]) + "</span>" +
+        (locked ? lockPill() : FREE_SOUND[id] && !isPremium() ? '<span class="tag small muted">' + esc(U.sndFree) + "</span>" : "<span></span>");
+      b.addEventListener("click", function () {
+        if (locked) { location.hash = "#/premium"; return; }
+        if (SleepSounds.current() === id) { SleepSounds.stop(); return; }
+        SleepSounds.play(id, U.snd[id], U.name);
+        SleepSounds.setTimer(soundTimer());
+      });
+      li.appendChild(b); ul.appendChild(li);
+    });
+  }
+  SleepSounds.onChange(function () { if (!$("v-sounds").hidden) renderSounds(); });
+
+  /* ---------- 14-day plan ---------- */
+  function planState() { var s = storeJSON("sleepPlan"); return s && s.done ? s : { done: [], last: "" }; }
+  function renderPlan() {
+    var s = planState(), n = s.done.length, finished = n >= 14, day = Math.min(14, n + 1);
+    var tips = PLAN_TIPS[lang] || PLAN_TIPS.en;
+    var dots = $("p-dots"); dots.innerHTML = "";
+    for (var i = 1; i <= 14; i++) {
+      var sp = document.createElement("span");
+      if (i <= n) sp.className = "done"; else if (i === day && !finished) sp.className = "now";
+      dots.appendChild(sp);
+    }
+    var card = $("p-card"), doneToday = s.last === dateKey(new Date());
+    if (finished) {
+      card.innerHTML = "<h2>" + esc(U.planTitle) + "</h2><p class=\"tip\">" + esc(U.planFinished) + '</p><button class="primary" type="button" id="p-restart">' + esc(U.planRestart) + "</button>";
+      $("p-restart").addEventListener("click", function () { storeJSON("sleepPlan", { done: [], last: "" }); $("p-note").textContent = ""; renderPlan(); });
+      return;
+    }
+    var techId = PLAN_TECH[day - 1], tx = techText(techId);
+    card.innerHTML = "<h2>" + esc(U.planProgress.replace("{n}", day)) + "</h2>" +
+      "<h3>" + esc(U.planHabit) + '</h3><p class="tip">' + esc(tips[day - 1]) + "</p>" +
+      "<h3>" + esc(U.planTech) + '</h3><p><a class="techlink" href="#/tech/' + techId + '">' + esc(tx.t) + "</a></p>" +
+      '<button class="primary" type="button" id="p-done"' + (doneToday ? " disabled" : "") + ">" + esc(U.planDone) + "</button>";
+    $("p-note").textContent = doneToday ? U.planDoneMsg : "";
+    $("p-done").addEventListener("click", function () {
+      var st = planState();
+      if (st.last === dateKey(new Date())) return;
+      st.done.push(dateKey(new Date())); st.last = dateKey(new Date());
+      storeJSON("sleepPlan", st);
+      renderPlan();
+    });
+  }
+
+  /* ---------- Sleep diary ---------- */
+  var diaryRating = 0;
+  function diary() { return storeJSON("sleepDiary") || {}; }
+  function nightMinutes(e) { var m = toMinutes(e.w) - toMinutes(e.b); return m <= 0 ? m + 1440 : m; }
+  function lastDays(n) {
+    var out = [], d = new Date();
+    for (var i = n - 1; i >= 0; i--) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i); out.push(x); }
+    return out;
+  }
+  function diaryAverages() {
+    var all = diary(), keys = lastDays(7).map(dateKey), sum = 0, q = 0, count = 0;
+    keys.forEach(function (k) { var e = all[k]; if (e) { sum += nightMinutes(e); q += e.q; count++; } });
+    return { count: count, avgMin: count ? Math.round(sum / count) : 0, avgQ: count ? q / count : 0 };
+  }
+  function renderDiary() {
+    var all = diary(), today = all[dateKey(new Date())];
+    $("y-bed").value = today ? today.b : (store("sleepBed") || "23:00");
+    $("y-wake").value = today ? today.w : (store("sleepWake") || "07:00");
+    diaryRating = today ? today.q : 0;
+    renderRating();
+    $("y-note").textContent = "";
+    renderDiaryStats();
+  }
+  function renderRating() {
+    var box = $("y-rate"); box.innerHTML = "";
+    U.diaryQs.forEach(function (label, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-pressed", diaryRating === i + 1 ? "true" : "false");
+      b.innerHTML = "<b>" + (i + 1) + "</b><span>" + esc(label) + "</span>";
+      b.addEventListener("click", function () { diaryRating = i + 1; renderRating(); });
+      box.appendChild(b);
+    });
+    $("y-save").disabled = !diaryRating;
+  }
+  function renderDiaryStats() {
+    var avg = diaryAverages(), all = diary(), days = lastDays(7);
+    $("y-empty").textContent = avg.count ? "" : U.diaryEmpty;
+    $("y-empty").hidden = !!avg.count;
+    $("y-stats").hidden = !avg.count;
+    $("y-bars").style.display = avg.count ? "" : "none";
+    if (!avg.count) return;
+    $("y-stats").innerHTML =
+      '<div class="stat"><div class="v">' + esc(durText(avg.avgMin)) + '</div><div class="l">' + esc(U.diaryAvg) + "</div></div>" +
+      '<div class="stat"><div class="v">' + avg.avgQ.toFixed(1).replace(".", lang === "en" || lang === "ja" || lang === "ko" || lang === "hi" ? "." : ",") + ' / 5</div><div class="l">' + esc(U.diaryAvgQ) + "</div></div>";
+    var svg = $("y-bars"), W = Math.max(260, Math.round(svg.getBoundingClientRect().width || 320)), H = 150, base = 120, maxH = 100, slot = W / 7;
+    var fmt; try { fmt = new Intl.DateTimeFormat(lang, { weekday: "short" }); } catch (e) { fmt = null; }
+    var html = '<line x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '" stroke="rgba(236,233,255,.12)"/>';
+    var guide = base - maxH * (8 * 60) / (10 * 60);
+    html += '<line x1="0" x2="' + W + '" y1="' + guide + '" y2="' + guide + '" stroke="rgba(236,233,255,.08)" stroke-dasharray="3 5"/>';
+    days.forEach(function (d, i) {
+      var e = all[dateKey(d)], cx = slot * i + slot / 2;
+      if (e) {
+        var mins = Math.min(nightMinutes(e), 600), h = Math.max(4, maxH * mins / 600);
+        var color = e.q >= 4 ? "#FFC47A" : e.q === 3 ? "#8F7BFF" : "#5B5F99";
+        html += '<rect x="' + (cx - slot * 0.28).toFixed(1) + '" y="' + (base - h).toFixed(1) + '" width="' + (slot * 0.56).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="6" fill="' + color + '"/>';
+      }
+      var wd = fmt ? fmt.format(d) : String(d.getDate());
+      html += '<text x="' + cx.toFixed(1) + '" y="' + (base + 20) + '" text-anchor="middle" font-size="11" fill="#9C9FCC">' + esc(wd) + "</text>";
+    });
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("aria-label", U.diaryWeek);
+    svg.innerHTML = html;
+  }
+  $("y-save").addEventListener("click", function () {
+    if (!diaryRating) return;
+    var all = diary();
+    all[dateKey(new Date())] = { b: $("y-bed").value || "23:00", w: $("y-wake").value || "07:00", q: diaryRating };
+    // Keep the diary small: only the last 120 nights.
+    var keys = Object.keys(all).sort(); while (keys.length > 120) delete all[keys.shift()];
+    storeJSON("sleepDiary", all);
+    $("y-note").textContent = U.diarySaved;
+    renderDiaryStats();
+  });
+
+  /* ---------- Premium screen ---------- */
+  function renderPremium(message) {
+    var st = Premium.state();
+    $("w-title").textContent = U.pwTitle;
+    $("w-sub").textContent = U.pwSub;
+    $("w-list").innerHTML = U.pwF.map(function (f) { return "<li>" + CHECK_SVG + "<span>" + esc(f) + "</span></li>"; }).join("");
+    $("w-once").textContent = U.pwOnce;
+    $("w-restore").textContent = U.pwRestore;
+    var buy = $("w-buy");
+    buy.textContent = st.price ? U.pwBuy.replace("{price}", st.price) : U.pwBuyNoPrice;
+    buy.hidden = st.active || !st.available;
+    $("w-once").hidden = st.active || !st.available;
+    $("w-restore").hidden = st.active || !st.available;
+    $("w-status").textContent = message || (st.active ? U.pwActive : st.ready && !st.available ? U.pwUnavailable : "");
+  }
+  $("w-buy").addEventListener("click", async function () {
+    var b = $("w-buy"); b.disabled = true;
+    var r = await Premium.buy();
+    b.disabled = false;
+    renderPremium(r === "ok" ? U.pwThanks : r === "cancel" ? "" : U.pwError);
+  });
+  $("w-restore").addEventListener("click", async function () {
+    var ok = await Premium.restore();
+    renderPremium(ok ? U.pwRestored : U.pwNothing);
+  });
+  Premium.onChange(function () {
+    renderFeature(); renderTechList();
+    if (!$("v-premium").hidden) renderPremium(); else route();
+  });
+
   /* ---------- Language ---------- */
   function pickLang() {
     var saved = store("sleepLang");
@@ -576,6 +939,7 @@
     $("h-lead").textContent = U.nowLead;
     $("h-note").textContent = U.note7;
     $("h-plan").textContent = U.planOther;
+    $("h-yours").textContent = U.yourSleep;
     $("h-stuck").textContent = U.stuck;
     $("h-all").textContent = U.allTech;
     $("a-title").textContent = U.title;
@@ -589,25 +953,43 @@
     $("t-title").textContent = U.techTitle;
     $("t-intro").textContent = U.techIntro;
     $("t-disc").textContent = U.disclaimer;
+    $("s-title").textContent = U.sndTitle;
+    $("s-sub").textContent = U.sndSub;
+    $("s-timer-l").textContent = U.sndTimer;
+    $("p-title").textContent = U.planTitle;
+    $("p-intro").textContent = U.planIntro;
+    $("y-title").textContent = U.diaryTitle;
+    $("y-intro").textContent = U.diaryIntro;
+    $("y-bed-l").textContent = U.diaryBed;
+    $("y-wake-l").textContent = U.diaryWake;
+    $("y-q").textContent = U.diaryQ;
+    $("y-save").textContent = U.diarySave;
+    $("y-week").textContent = U.diaryWeek;
+    document.querySelectorAll(".back-t").forEach(function (el) { el.textContent = U.back; });
     $("tab-home").textContent = U.tabHome;
     $("tab-alarm").textContent = U.tabAlarm;
     $("tab-tech").textContent = U.tabTech;
+    $("tab-sounds").textContent = U.tabSounds;
     renderFeature();
     renderTechList();
     route();
   }
 
-  /* ---------- Routing (#/, #/alarm, #/tech, #/tech/<id>) ---------- */
-  function show(id) {
-    ["v-home", "v-alarm", "v-tech", "v-detail"].forEach(function (v) { $(v).hidden = v !== id; });
-  }
+  /* ---------- Routing ---------- */
+  var VIEWS = ["v-home", "v-alarm", "v-tech", "v-detail", "v-sounds", "v-plan", "v-diary", "v-premium"];
+  function show(id) { VIEWS.forEach(function (v) { $(v).hidden = v !== id; }); }
   function route() {
     var h = location.hash.replace(/^#\/?/, "").split("/");
     var view = h[0] || "home", tab = view;
     if (view !== "tech" || !h[1]) { if (B.on || B.timers.length) breathReset(); }
+    if ((view === "plan" || view === "diary") && !isPremium() && Premium.state().ready) { location.replace("#/premium"); return; }
     if (view === "alarm") { show("v-alarm"); calc(); }
     else if (view === "tech" && h[1]) { show("v-detail"); renderDetail(h[1]); tab = "tech"; }
-    else if (view === "tech") { show("v-tech"); }
+    else if (view === "tech") { show("v-tech"); renderTechList(); }
+    else if (view === "sounds") { show("v-sounds"); renderSounds(); }
+    else if (view === "plan") { show("v-plan"); renderPlan(); tab = "tech"; }
+    else if (view === "diary") { show("v-diary"); renderDiary(); tab = "home"; }
+    else if (view === "premium") { show("v-premium"); renderPremium(); tab = ""; }
     else { show("v-home"); tab = "home"; renderHome(true); }
     document.querySelectorAll(".tabs a").forEach(function (a) {
       if (a.getAttribute("data-tab") === tab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
@@ -619,9 +1001,11 @@
     route();
     window.scrollTo(0, 0);
   });
-  // Back goes to the previous screen; if the app was opened straight on a technique, it goes to the list.
-  $("d-back").addEventListener("click", function () {
-    if (navigatedInApp) history.back(); else location.hash = "#/tech";
+  // Back goes to the previous screen; if the app was opened straight on a subpage, it goes to its parent.
+  document.querySelectorAll("[data-back]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (navigatedInApp) history.back(); else location.hash = btn.getAttribute("data-back");
+    });
   });
 
   /* ---------- Events ---------- */
@@ -629,7 +1013,11 @@
   $("spac").addEventListener("change", calc);
   $("obudzic").addEventListener("change", calc);
   $("langSel").addEventListener("change", function (e) { applyLang(e.target.value); });
-  window.addEventListener("resize", function () { if (!$("v-home").hidden) renderHome(true); else if (!$("v-alarm").hidden) calc(); });
+  window.addEventListener("resize", function () {
+    if (!$("v-home").hidden) renderHome(true);
+    else if (!$("v-alarm").hidden) calc();
+    else if (!$("v-diary").hidden) renderDiaryStats();
+  });
   setInterval(function () { if (!$("v-home").hidden) renderHome(false); }, 10000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden && !$("v-home").hidden) renderHome(true); });
 
@@ -638,6 +1026,7 @@
   if (w) $("obudzic").value = w;
 
   applyLang(pickLang());
+  Premium.init(lang);
 
   // Service worker: keeps the app working offline.
   if ("serviceWorker" in navigator) {

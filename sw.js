@@ -1,10 +1,13 @@
 // Service worker: zapisuje aplikację w pamięci telefonu, żeby działała bez internetu.
 // Po każdej zmianie plików podbij numer wersji, żeby telefony pobrały nową wersję.
-var CACHE = "sleep-phases-v3";
+var CACHE = "sleep-phases-v4";
 var FILES = [
   "./",
   "./index.html",
   "./i18n.js",
+  "./i18n-premium.js",
+  "./sounds.js",
+  "./premium.js",
   "./alegreya.woff",
   "./manifest.json",
   "./icon-192.png",
